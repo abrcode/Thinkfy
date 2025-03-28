@@ -84,8 +84,8 @@ struct ContentView: View {
                             .bold()
                             .padding(.horizontal)
                         
-                        ForEach(1...3, id: \.self) { index in
-                            ResultCard(index: index)
+                        ForEach(quizViewModel.recentResults) { result in
+                            ResultCard(result: result)
                         }
                     }
                 }
@@ -107,6 +107,7 @@ struct CategoryCard: View {
                 .font(.headline)
         }
         .frame(maxWidth: .infinity)
+        .frame(height: 70)
         .padding()
         .background(Color.white)
         .cornerRadius(15)
@@ -115,7 +116,7 @@ struct CategoryCard: View {
 }
 
 struct ResultCard: View {
-    let index: Int
+    let result: QuizResult
     
     var body: some View {
         HStack {
@@ -123,20 +124,20 @@ struct ResultCard: View {
                 .fill(Color.purple.opacity(0.2))
                 .frame(width: 40, height: 40)
                 .overlay(
-                    Text("\(index)")
+                    Text("\(result.score)")
                         .foregroundColor(.purple)
                 )
             
             VStack(alignment: .leading) {
-                Text("Featured Categories")
+                Text(result.categoryName)
                     .font(.headline)
-                ProgressView(value: 0.6)
+                ProgressView(value: result.percentage)
                     .progressViewStyle(LinearProgressViewStyle())
             }
             
             Spacer()
             
-            Text("6/10")
+            Text("\(result.score)/\(result.totalQuestions)")
                 .foregroundColor(.gray)
         }
         .padding()
