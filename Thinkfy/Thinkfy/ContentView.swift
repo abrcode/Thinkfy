@@ -33,30 +33,7 @@ struct ContentView: View {
                     .padding()
                     
                     // Stats Card
-                    HStack {
-                        Spacer()
-                        VStack {
-                            Text("\(quizViewModel.userPoints)")
-                                .font(.title2)
-                                .bold()
-                            Text("points")
-                                .foregroundColor(.gray)
-                        }
-//                        Divider()
-//                            .frame(height: 40)
-//                        VStack {
-//                            Text("\(quizViewModel.userRanking)")
-//                                .font(.title2)
-//                                .bold()
-//                            Text("Ranking")
-//                                .foregroundColor(.gray)
-//                        }
-                        Spacer()
-                    }
-                    .padding()
-                    .background(Color(.systemOrange).opacity(0.2))
-                    .cornerRadius(15)
-                    .padding(.horizontal)
+                    StatsCardView(quizViewModel: quizViewModel)
                     
                     // Categories
                     VStack(alignment: .leading) {
@@ -108,6 +85,82 @@ struct ContentView: View {
         }
     }
 }
+
+struct StatsCardView : View {
+    
+    @ObservedObject var quizViewModel = QuizViewModel()
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            // Left square box with current score
+            VStack {
+                Text("\(quizViewModel.userPoints)")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.black)
+                Text("Current\nScore")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(width: 100, height: 100)
+            .background(Color.white)
+            .cornerRadius(15)
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 4)
+            
+            // Right side with total questions and progress
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Total Questions")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.black)
+                    Spacer()
+                    Text("\(quizViewModel.recentResults.reduce(0) { $0 + $1.totalQuestions })")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.orange)
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Progress")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.black.opacity(0.8))
+                    
+                    let totalAnswered = quizViewModel.recentResults.reduce(0) { $0 + $1.score }
+                    let totalQuestions = quizViewModel.recentResults.reduce(0) { $0 + $1.totalQuestions }
+                    let progress = totalQuestions > 0 ? Double(totalAnswered) / Double(totalQuestions) : 0
+                    
+                    ProgressView(value: progress)
+                        .tint(.orange)
+                    
+                    HStack {
+                        Text("\(totalAnswered)/\(totalQuestions)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.gray.opacity(0.8))
+                        Spacer()
+                        Text(String(format: "%.0f%%", progress * 100))
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.orange)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 4)
+        .padding(.horizontal)
+    }
+}
+
 
 struct CategoryCard: View {
     let category: Category
