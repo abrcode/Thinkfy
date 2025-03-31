@@ -43,8 +43,16 @@ class QuizViewModel: ObservableObject {
     }
     
     func saveQuizResult(category: Category, score: Int, totalQuestions: Int) {
-        // Save result to database
-        dbManager.saveQuizResult(categoryId: category.id, score: score, totalQuestions: totalQuestions)
+        // Check if there's an existing result for this category
+        if let existingResult = recentResults.first(where: { $0.categoryName == category.name }) {
+            // Update existing result if new score is better
+            if score > existingResult.score {
+                dbManager.updateQuizResult(categoryId: category.id, score: score, totalQuestions: totalQuestions)
+            }
+        } else {
+            // Save new result if no existing result for this category
+            dbManager.saveQuizResult(categoryId: category.id, score: score, totalQuestions: totalQuestions)
+        }
         
         // Reload recent results and user data
         DispatchQueue.main.async {

@@ -274,4 +274,30 @@ class DatabaseManager {
         sqlite3_finalize(statement)
         return results
     }
+    
+    func updateQuizResult(categoryId: Int, score: Int, totalQuestions: Int) {
+        let sql = """
+            UPDATE results 
+            SET score = ?, total_questions = ?, date = ? 
+            WHERE category_id = ? 
+            ORDER BY date DESC LIMIT 1
+            """
+        var statement: OpaquePointer?
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let dateString = dateFormatter.string(from: Date())
+        
+        if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_bind_int(statement, 1, Int32(score))
+            sqlite3_bind_int(statement, 2, Int32(totalQuestions))
+            sqlite3_bind_text(statement, 3, (dateString as NSString).utf8String, -1, nil)
+            sqlite3_bind_int(statement, 4, Int32(categoryId))
+            
+            if sqlite3_step(statement) == SQLITE_DONE {
+                print("Successfully updated quiz result")
+            }
+        }
+        sqlite3_finalize(statement)
+    }
 }
