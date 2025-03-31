@@ -69,7 +69,8 @@ struct ContentView: View {
                             GridItem(.flexible())
                         ], spacing: 15) {
                             ForEach(quizViewModel.categories) { category in
-                                NavigationLink(destination: QuizView(category: category)) {
+                                NavigationLink(destination: QuizView(category: category)
+                                    .environmentObject(quizViewModel)) {
                                     CategoryCard(category: category)
                                 }
                             }
@@ -91,6 +92,9 @@ struct ContentView: View {
                 }
             }
             .navigationBarHidden(true)
+            .onAppear {
+                quizViewModel.loadUserData()
+            }
         }
     }
 }
