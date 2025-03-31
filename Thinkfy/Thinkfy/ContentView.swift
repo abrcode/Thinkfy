@@ -21,7 +21,7 @@ struct ContentView: View {
                             Text("👋 Hi \(sessionManager.userName),")
                                 .font(.title2)
                                 .bold()
-                            Text("Great to see you again!")
+                            Text(sessionManager.hasCompletedOnboarding ? "Ready to Train Your Brain?" : "Welcome to Thinkfy!")
                                 .foregroundColor(.gray)
                         }
                         Spacer()

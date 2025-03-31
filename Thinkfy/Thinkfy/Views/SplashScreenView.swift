@@ -32,11 +32,11 @@ struct SplashScreenView: View {
                         .foregroundColor(.blue)
                         .rotationEffect(.degrees(rotation))
                     
-                    Text("Thinkfy")
+                    Text(sessionManager.hasCompletedOnboarding ? "Welcome Back, \(sessionManager.userName)!" : "Thinkfy")
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     
-                    Text("Train Your Brain")
+                    Text(sessionManager.hasCompletedOnboarding ? "Ready to Train Your Brain?" : "Train Your Brain")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.secondary)
                         .opacity(opacity)
