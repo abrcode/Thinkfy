@@ -2,22 +2,22 @@ import Foundation
 
 struct QuizQuestion: Identifiable {
     let id = UUID()
-    let question: String
-    let options: [String]
-    let correctAnswer: String
+    var question: String
+    var options: [String]
+    var correctAnswer: String
 }
 
 struct QuizCategory {
-    let category: Category
-    let questions: [QuizQuestion]
+    var category: Category
+    var questions: [QuizQuestion]
 }
 
 struct QuizResult: Identifiable {
     let id = UUID()
-    let categoryName: String
-    let score: Int
-    let totalQuestions: Int
-    let date: Date
+    var categoryName: String
+    var score: Int
+    var totalQuestions: Int
+    var date: Date
     
     var percentage: Double {
         return Double(score) / Double(totalQuestions)
