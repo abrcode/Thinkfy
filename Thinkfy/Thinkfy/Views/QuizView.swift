@@ -10,6 +10,7 @@ struct QuizView: View {
     @State private var selectedAnswer: String? = nil
     @State private var showFeedback = false
     @State private var isCorrect = false
+    @State private var showingExitConfirmation = false
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -91,6 +92,17 @@ struct QuizView: View {
             .padding(.top)
         }
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    showingExitConfirmation = true
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(Color(hex: category.color))
+                }
+            }
+        }
         .overlay {
             if showingScore {
                 QuizCompletionView(
@@ -105,6 +117,55 @@ struct QuizView: View {
                     )
                     dismiss()
                 }
+            }
+            
+            if showingExitConfirmation {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        showingExitConfirmation = false
+                    }
+                
+                VStack(spacing: 20) {
+                    Text("Exit Quiz?")
+                        .font(.title2)
+                        .bold()
+                    
+                    Text("If you quit now, you'll need to start over.")
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                    
+                    HStack(spacing: 20) {
+                        Button(action: {
+                            showingExitConfirmation = false
+                        }) {
+                            Text("No, Continue")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 120)
+                                .padding()
+                                .background(Color(hex: category.color))
+                                .cornerRadius(10)
+                        }
+                        
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Text("Yes, Exit")
+                                .font(.headline)
+                                .foregroundColor(.red)
+                                .frame(width: 120)
+                                .padding()
+                                .background(Color.red.opacity(0.1))
+                                .cornerRadius(10)
+                        }
+                    }
+                }
+                .padding(30)
+                .background(Color.white)
+                .cornerRadius(20)
+                .shadow(radius: 10)
+                .padding(.horizontal, 40)
             }
         }
         .onAppear {
