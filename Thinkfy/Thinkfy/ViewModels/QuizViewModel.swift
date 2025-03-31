@@ -7,6 +7,11 @@ class QuizViewModel: ObservableObject {
     @Published var userRanking: Int = 0
     @Published var quizCategories: [QuizCategory] = []
     @Published var recentResults: [QuizResult] = []
+    @Published var currentCategory: Category?
+    @Published var questions: [QuizQuestion] = []
+    @Published var currentQuestionIndex: Int = 0
+    @Published var score: Int = 0
+    @Published var showResults: Bool = false
     
     private let dbManager = DatabaseManager.shared
     
@@ -59,5 +64,25 @@ class QuizViewModel: ObservableObject {
             self.loadUserData()
             self.objectWillChange.send()
         }
+    }
+    
+    func loadQuestions(for category: Category) {
+        currentCategory = category
+        questions = dbManager.getQuestions(for: category.id)
+        
+        // Shuffle questions and their options
+        questions.shuffle()
+        for i in 0..<questions.count {
+            let (shuffledOptions, correctAnswer) = SeedData.shuffleOptions(
+                options: questions[i].options,
+                correctAnswer: questions[i].correctAnswer
+            )
+            questions[i].options = shuffledOptions
+            questions[i].correctAnswer = correctAnswer
+        }
+        
+        currentQuestionIndex = 0
+        score = 0
+        showResults = false
     }
 }

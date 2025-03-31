@@ -90,38 +90,20 @@ class DatabaseManager {
         
         if count == 0 {
             // Seed categories
-            let categories = [
-                (name: "Science", icon: "atom", color: "#007AFF"),
-                (name: "History", icon: "book.closed", color: "#FF9500"),
-                (name: "Geography", icon: "globe", color: "#34C759"),
-                (name: "Mathematics", icon: "function", color: "#FF3B30")
-            ]
-            
-            for category in categories {
+            for category in SeedData.categories {
                 insertCategory(name: category.name, icon: category.icon, color: category.color)
             }
             
-            // Seed questions
-            insertQuestion(categoryName: "Science", question: "What is the chemical symbol for gold?",
-                         options: ["Au", "Ag", "Fe", "Cu"], correctAnswer: "Au")
-            insertQuestion(categoryName: "Science", question: "Which planet is known as the Red Planet?",
-                         options: ["Mars", "Venus", "Jupiter", "Saturn"], correctAnswer: "Mars")
-            
-            insertQuestion(categoryName: "History", question: "Who was the first President of the United States?",
-                         options: ["George Washington", "Thomas Jefferson", "John Adams", "Benjamin Franklin"],
-                         correctAnswer: "George Washington")
-            insertQuestion(categoryName: "History", question: "In which year did World War II end?",
-                         options: ["1945", "1944", "1946", "1943"], correctAnswer: "1945")
-            
-            insertQuestion(categoryName: "Geography", question: "What is the capital of Japan?",
-                         options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], correctAnswer: "Tokyo")
-            insertQuestion(categoryName: "Geography", question: "Which is the largest ocean on Earth?",
-                         options: ["Pacific", "Atlantic", "Indian", "Arctic"], correctAnswer: "Pacific")
-            
-            insertQuestion(categoryName: "Mathematics", question: "What is 7 x 8?",
-                         options: ["56", "54", "58", "62"], correctAnswer: "56")
-            insertQuestion(categoryName: "Mathematics", question: "What is the square root of 144?",
-                         options: ["12", "14", "10", "16"], correctAnswer: "12")
+            // Seed questions with shuffled options
+            for question in SeedData.questions {
+                let (shuffledOptions, correctAnswer) = SeedData.shuffleOptions(options: question.options, correctAnswer: question.correctAnswer)
+                insertQuestion(
+                    categoryName: question.category,
+                    question: question.question,
+                    options: shuffledOptions,
+                    correctAnswer: correctAnswer
+                )
+            }
         }
     }
     

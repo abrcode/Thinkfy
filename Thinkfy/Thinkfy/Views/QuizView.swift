@@ -150,10 +150,12 @@ struct AnswerButton: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.title2)
+                        .padding()
                 } else if isWrong == true {
                     Image(systemName: "x.circle.fill")
                         .foregroundColor(.red)
                         .font(.title2)
+                        .padding()
                 }
             }
             .frame(maxWidth: .infinity)
