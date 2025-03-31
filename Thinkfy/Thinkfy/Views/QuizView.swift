@@ -2,7 +2,7 @@ import SwiftUI
 
 struct QuizView: View {
     let category: Category
-    @StateObject private var viewModel = QuizViewModel()
+    @EnvironmentObject private var viewModel: QuizViewModel
     @State private var currentQuestionIndex = 0
     @State private var correctAnswers = 0
     @State private var showingScore = false
