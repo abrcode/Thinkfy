@@ -11,7 +11,7 @@ import SwiftUI
 struct ThinkfyApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashScreenView()
         }
     }
 }

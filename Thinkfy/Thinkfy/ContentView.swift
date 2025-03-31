@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var quizViewModel = QuizViewModel()
+    private let sessionManager = SessionManager.shared
     
     var body: some View {
         NavigationView {
@@ -17,7 +18,7 @@ struct ContentView: View {
                     // Welcome Header
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("👋 Hi Pamela,")
+                            Text("👋 Hi \(sessionManager.userName),")
                                 .font(.title2)
                                 .bold()
                             Text("Great to see you again!")
