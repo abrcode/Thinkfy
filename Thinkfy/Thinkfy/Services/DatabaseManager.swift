@@ -3,28 +3,101 @@ import SQLite3
 
 class DatabaseManager {
     static let shared = DatabaseManager()
-    private var db: OpaquePointer?
+    fileprivate var db: DBHelper = DBHelper()
     
-    private init() {
-        setupDatabase()
-        seedInitialData()
+    // MARK: - CRUD Operations
+    func getAllCategories() -> [Category] {
+        db.getAllCategories()
     }
     
-    private func setupDatabase() {
-        let fileURL = try! FileManager.default
-            .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            .appendingPathComponent("quizDatabase.sqlite")
+    func getQuestions(for categoryId: Int) -> [QuizQuestion] {
+        db.getQuestions(for: categoryId)
+    }
+    
+    func saveQuizResult(categoryId: Int, score: Int, totalQuestions: Int) {
+        db.saveQuizResult(
+                categoryId: categoryId,
+                score: score,
+                totalQuestions: totalQuestions)
+    }
+    
+    func getRecentResults(limit: Int = 5) -> [QuizResult] {
+        db.getRecentResults(limit: limit)
+    }
+    
+    func updateQuizResult(categoryId: Int, score: Int, totalQuestions: Int) {
+        db.updateQuizResult(
+                categoryId: categoryId,
+                score: score,
+                totalQuestions: totalQuestions)
+    }
+}
+
+
+private class DBHelper
+{
+    private enum DBHelper: String {
+        case dbName = "quizDatabase.sqlite"
+        case dbNameShort = "quizDatabase"
+        case db = "sqlite"
+        case dateFormat = "yyyy-MM-dd HH:mm:ss"
+    }
+    
+    init()
+    {
+        copyDatabaseIfNeeded()
+        db = openDatabase()
+    }
+    
+    var db:OpaquePointer?
+    
+    func copyDatabaseIfNeeded() {
+        // Move database file from bundle to documents folder
+        let fileManager = FileManager.default
         
-        print("Database file path: \(fileURL.path)")
+        guard let documentsUrl = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         
-        if sqlite3_open(fileURL.path, &db) != SQLITE_OK {
-            print("Error opening database")
-            return
+        let finalDatabaseURL = documentsUrl.appendingPathComponent(DBHelper.dbName.rawValue)
+        
+        do {
+            if !fileManager.fileExists(atPath: finalDatabaseURL.path) {
+                print("DB does not exist in documents folder")
+                
+                if let dbFilePath = Bundle.main.path(
+                    forResource: DBHelper.dbNameShort.rawValue,
+                    ofType: DBHelper.db.rawValue
+                ) {
+                    try fileManager.copyItem(atPath: dbFilePath, toPath: finalDatabaseURL.path)
+                } else {
+                    print("Uh oh - \(DBHelper.dbName.rawValue) is not in the app bundle")
+                }
+            } else {
+                print("Database file found at path: \(finalDatabaseURL.path)")
+            }
+        } catch {
+            print("Unable to copy \(DBHelper.dbName.rawValue): \(error)")
         }
-        
-        createTables()
     }
     
+    
+    func openDatabase() -> OpaquePointer?
+    {
+        let fileURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            .appendingPathComponent(DBHelper.dbName.rawValue)
+        var db: OpaquePointer? = nil
+        if sqlite3_open(fileURL.path, &db) != SQLITE_OK
+        {
+            print("error opening database")
+            return nil
+        }
+        else
+        {
+            print("Successfully opened connection to database at \(fileURL.path)")
+            return db
+        }
+    }
+    
+    /*
     private func createTables() {
         // Create tables for categories, quizzes, and results
         let createCategoryTable = """
@@ -106,59 +179,39 @@ class DatabaseManager {
             }
         }
     }
+    */
     
-    // MARK: - CRUD Operations
-    func insertCategory(name: String, icon: String, color: String) -> Int64? {
+    func insertCategory(name: String, icon: String, color: String) {
         let sql = "INSERT INTO categories (name, icon, color) VALUES (?, ?, ?)"
         var statement: OpaquePointer?
-        var lastId: Int64?
-        
+    
         if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
             sqlite3_bind_text(statement, 1, (name as NSString).utf8String, -1, nil)
             sqlite3_bind_text(statement, 2, (icon as NSString).utf8String, -1, nil)
             sqlite3_bind_text(statement, 3, (color as NSString).utf8String, -1, nil)
             
             if sqlite3_step(statement) == SQLITE_DONE {
-                lastId = sqlite3_last_insert_rowid(db)
+                _ = sqlite3_last_insert_rowid(db)
             }
         }
         sqlite3_finalize(statement)
-        return lastId
     }
     
     func insertQuestion(categoryName: String, question: String, options: [String], correctAnswer: String) {
         // Get category ID
         let getCategoryIdSQL = "SELECT id FROM categories WHERE name = ?"
         var statement: OpaquePointer?
-        var categoryId: Int32 = 0
         
         if sqlite3_prepare_v2(db, getCategoryIdSQL, -1, &statement, nil) == SQLITE_OK {
             sqlite3_bind_text(statement, 1, (categoryName as NSString).utf8String, -1, nil)
             if sqlite3_step(statement) == SQLITE_ROW {
-                categoryId = sqlite3_column_int(statement, 0)
-            }
-        }
-        sqlite3_finalize(statement)
-        
-        // Insert question
-        let optionsJson = try? JSONSerialization.data(withJSONObject: options, options: [])
-        let optionsString = String(data: optionsJson ?? Data(), encoding: .utf8) ?? ""
-        
-        let sql = "INSERT INTO quizzes (category_id, question, options, correct_answer) VALUES (?, ?, ?, ?)"
-        
-        if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
-            sqlite3_bind_int(statement, 1, categoryId)
-            sqlite3_bind_text(statement, 2, (question as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 3, (optionsString as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 4, (correctAnswer as NSString).utf8String, -1, nil)
-            
-            if sqlite3_step(statement) == SQLITE_DONE {
-                print("Successfully inserted question")
+                _ = sqlite3_column_int(statement, 0)
             }
         }
         sqlite3_finalize(statement)
     }
     
+    //MARK: CRUD Opertaions
     func getAllCategories() -> [Category] {
         var categories: [Category] = []
         let sql = "SELECT * FROM categories"
@@ -206,7 +259,7 @@ class DatabaseManager {
         var statement: OpaquePointer?
         
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormatter.dateFormat = DBHelper.dateFormat.rawValue
         let dateString = dateFormatter.string(from: Date())
         
         if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
@@ -222,7 +275,7 @@ class DatabaseManager {
         sqlite3_finalize(statement)
     }
     
-    func getRecentResults(limit: Int = 5) -> [QuizResult] {
+    func getRecentResults(limit: Int) -> [QuizResult] {
         var results: [QuizResult] = []
         let sql = """
             SELECT c.name, r.score, r.total_questions, r.date 
@@ -242,7 +295,7 @@ class DatabaseManager {
                 let dateString = String(cString: sqlite3_column_text(statement, 3))
                 
                 let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                dateFormatter.dateFormat =  DBHelper.dateFormat.rawValue
                 let date = dateFormatter.date(from: dateString) ?? Date()
                 
                 results.append(QuizResult(
@@ -267,7 +320,7 @@ class DatabaseManager {
         var statement: OpaquePointer?
         
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormatter.dateFormat =  DBHelper.dateFormat.rawValue
         let dateString = dateFormatter.string(from: Date())
         
         if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
@@ -282,4 +335,6 @@ class DatabaseManager {
         }
         sqlite3_finalize(statement)
     }
+    
 }
+

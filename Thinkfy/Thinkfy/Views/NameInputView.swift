@@ -6,6 +6,10 @@ struct NameInputView: View {
     @State private var nameFieldOpacity: Double = 0
     @State private var buttonOffset: CGFloat = 50
     @State private var buttonOpacity: Double = 0
+    @FocusState private var focusedField: FocusedField?
+    enum FocusedField {
+            case userName
+    }
     
     var body: some View {
         ZStack {
@@ -37,6 +41,7 @@ struct NameInputView: View {
                 
                 // Name Input Field
                 TextField("Enter your name", text: $viewModel.userName)
+                    .focused($focusedField, equals: .userName)
                     .padding()
                     .overlay {
                         RoundedRectangle(cornerRadius: 30)
@@ -78,6 +83,7 @@ struct NameInputView: View {
             }
         }
         .onAppear {
+            focusedField = .userName
             withAnimation(.easeOut(duration: 0.8).delay(0.3)) {
                 nameFieldOffset = 0
                 nameFieldOpacity = 1
